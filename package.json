@@ -1,0 +1,21 @@
+{
+  "name": "y-react",
+  "version": "0.0.1",
+  "description": "self react",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "cross-env NODE_ENV=development webpack-dev-server --config ./build/webpack.config.js"
+  },
+  "author": "hungryyang",
+  "license": "ISC",
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "html-webpack-plugin": "4",
+    "typescript": "^3.6.3",
+    "awesome-typescript-loader": "^5.2.1",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.2.3",
+    "webpack-dev-server": "^3.8.0"
+  }
+}
