@@ -1,8 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import {createElement} from "./createElement.tsx";
+import { createElement } from "./createElement.tsx";
+import { render } from "./render.tsx";
+
 const YReact = {
-    createElement
+    createElement,
+    render
 }
 
 /** @jsx YReact.createElement */
@@ -12,4 +15,4 @@ const element = (<div id="foo">
 </div>)
 
 const container = document.getElementById('root')
-ReactDOM.render(element, container)
+YReact.render(element, container)
