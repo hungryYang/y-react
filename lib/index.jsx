@@ -10,8 +10,8 @@ const YReact = {
 
 /** @jsx YReact.createElement */
 const element = (<div id="foo">
-    <a>bar</a>
-    test
+    <span>1</span>
+    <span>2</span>
 </div>)
 
 const container = document.getElementById('root')
