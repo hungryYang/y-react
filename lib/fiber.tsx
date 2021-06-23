@@ -152,7 +152,6 @@ function reconcileChildren(wipFiber: DomElement, elements: ELEMENT[]) {
                 effectTag: "PLACEMENT" // 记录操作
             }
         }
-
         /**
          * 如果类型不同别有旧fiber则删除节点
          * */

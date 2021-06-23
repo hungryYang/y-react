@@ -1,5 +1,4 @@
-export function createElement(type: string, props: object, ...children : any[]) {
-    console.log(type)
+export function createElement(type: string, props: { [key: string]: any, children?: any }, ...children : any[]) {
     return {
         type,
         props: {
