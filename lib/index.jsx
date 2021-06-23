@@ -1,17 +1,20 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { createElement } from "./createElement.tsx";
-import { render } from "./render.tsx";
+import { fiber } from "./fiber.tsx";
 
 const YReact = {
     createElement,
-    render
+    render: fiber
 }
 
+function test () {
+    console.log(111)
+}
 /** @jsx YReact.createElement */
 const element = (<div id="foo">
-    <span>1</span>
-    <span>2</span>
+    11111
+    <p onClick={test}>11111111</p>
 </div>)
 
 const container = document.getElementById('root')
