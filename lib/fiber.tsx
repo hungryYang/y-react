@@ -25,8 +25,10 @@ interface DomElement extends NextUnitOfWork{
 
 let nextUnitOfWork: DomElement | null = null
 let wipRoot: DomElement | null = null
-let currentRoot: DomElement | null = null
+let currentRoot: any = null
 let deletions: DomElement[] = []
+let wipFiber = null
+let hookIndex = null
 
 const isEvent = (key: string) => key.startsWith("on")
 /**
@@ -76,17 +78,31 @@ function updateDom(dom: any, prevProps: Props, nextProps: Props) {
         .forEach((name: string) => dom[name] = nextProps[name])
 }
 
+function commitDeletion(fiber: any, domParent: HTMLElement) {
+    if (fiber.dom) {
+        domParent.removeChild(fiber.dom)
+    } else {
+        commitDeletion(fiber.child, domParent)
+    }
+}
+
 function commitWork(fiber: DomElement) {
     if (!fiber) return
 
-    const domParent = fiber.parent.dom
+
+    let domParentFiber = fiber.parent
+    while (!domParentFiber.dom) {
+        domParentFiber = domParentFiber.parent
+    }
+    const domParent = domParentFiber.dom
+    // const domParent = fiber.parent.dom
     /**
      * 根据effectTag对节点进行处理
      * */
     if (fiber.effectTag === "PLACEMENT" && fiber.dom !== null) {
         domParent.appendChild(fiber.dom)
     } else if (fiber.effectTag === "DELETION") {
-        domParent.removeChild(fiber.dom)
+        commitDeletion(fiber, domParent)
     } else if (fiber.effectTag === "UPDATE" && fiber.dom !== null) {
         updateDom(fiber.dom, fiber.alternate.props, fiber.props)
     }
@@ -180,10 +196,35 @@ function reconcileChildren(wipFiber: DomElement, elements: ELEMENT[]) {
     }
 }
 
-function performUnitOfWork (fiber: DomElement): DomElement | null{
+function updateFunctionComponent(fiber: any) {
+    wipFiber = fiber
+    hookIndex = 0
+    // 记录多个hooks调用
+    wipFiber.hooks = []
+    const children = [fiber.type(fiber.props)]
+    reconcileChildren(fiber, children)
+}
+
+function updateHostComponent(fiber:any) {
     if (!fiber.dom) {
         fiber.dom = createDom(fiber)
     }
+    reconcileChildren(fiber, fiber.props.children)
+}
+
+function performUnitOfWork (fiber: any): DomElement | null{
+    /**
+     * 给每一个child创建一个fiber
+     * */
+    const isFunctionComponent = fiber.type instanceof Function
+    if (isFunctionComponent) {
+        updateFunctionComponent(fiber)
+    } else {
+        updateHostComponent(fiber)
+    }
+    // if (!fiber.dom) {
+    //     fiber.dom = createDom(fiber)
+    // }
 
     /**
      * TODO：每次处理元素都会向DOM添加新节点，并且可能被浏览器打断
@@ -193,11 +234,8 @@ function performUnitOfWork (fiber: DomElement): DomElement | null{
      *     }
      * */
 
-    /**
-     * 给每一个child创建一个fiber
-     * */
-    const elements = fiber.props.children
-    reconcileChildren(fiber, elements)
+    // const elements = fiber.props.children
+    // reconcileChildren(fiber, elements)
 
     if (fiber.child) {
         return fiber.child
@@ -228,6 +266,33 @@ function createDom (element: any) {
      * */
     updateDom(dom, {}, element.props)
     return dom
+}
+
+export function useState (initial) {
+    const oldHook = wipFiber.alternate && wipFiber.alternate.hooks && wipFiber.alternate.hooks[hookIndex]
+
+    const hook = {
+        state: oldHook ? oldHook.state: initial,
+        queue: []
+    }
+    // 更新actions
+    const actions = oldHook ? oldHook.queue : []
+    actions.forEach(action => {
+        hook.state = action(hook.state)
+    })
+    const setState = action => {
+        hook.queue.push(action)
+        wipRoot = {
+            dom: currentRoot.dom,
+            props: currentRoot.props,
+            alternate: currentRoot,
+        }
+        nextUnitOfWork = wipRoot
+        deletions = []
+    }
+    wipFiber.hooks.push(hook)
+    hookIndex++
+    return [hook.state, setState]
 }
 
 export function fiber (element: ELEMENT, container: HTMLElement | Text) {
